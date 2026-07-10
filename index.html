@@ -524,6 +524,47 @@
           var labelAttr = currentLang === 'zh-CN' ? 'data-zh-label' : 'data-en-label';
           industryLabel = industrySelect.options[industrySelect.selectedIndex].getAttribute(labelAttr) || formData.get('industry');
         }
+
+        var accessKey = document.createElement('input');
+        accessKey.type = 'hidden';
+        accessKey.name = 'access_key';
+        accessKey.value = '8a9a5ebf-5126-4185-9086-e0b9d74b8382';
+        form.appendChild(accessKey);
+
+        var subj = document.createElement('input');
+        subj.type = 'hidden';
+        subj.name = 'subject';
+        subj.value = 'GEOLYX Website Inquiry';
+        form.appendChild(subj);
+
+        var btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.textContent = currentLang === 'zh-CN' ? '提交中...' : 'Sending...';
+
+        fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          body: new FormData(form)
+        }).then(function(r){ return r.json(); })
+        .then(function(data){
+          btn.disabled = false;
+          btn.textContent = currentLang === 'zh-CN' ? '联系我们' : 'Contact Us';
+          if(data.success){
+            showSuccess();
+            form.reset();
+          } else {
+            fallbackMailto(formData, industryLabel);
+          }
+        }).catch(function(){
+          btn.disabled = false;
+          btn.textContent = currentLang === 'zh-CN' ? '联系我们' : 'Contact Us';
+          fallbackMailto(formData, industryLabel);
+        });
+
+        accessKey.remove();
+        subj.remove();
+      });
+
+      function fallbackMailto(formData, industryLabel) {
         var subject = currentLang === 'zh-CN'
           ? '来自 GEOLYX INDUSTRIALS 网站的咨询'
           : 'Inquiry from GEOLYX INDUSTRIALS website';
@@ -536,12 +577,12 @@
           '',
           (currentLang === 'zh-CN' ? '留言' : 'Message') + ':',
           formData.get('message') || ''
-        ].join('\n');
+        ].join('\\n');
         var mailtoUrl = 'mailto:marketing@geolyxtech.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
         window.open(mailtoUrl, '_blank');
         showSuccess();
         form.reset();
-      });
+      }
     }
 
     var closeBtn2 = document.querySelector('.modal-close-btn');
